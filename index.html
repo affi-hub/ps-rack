@@ -98,6 +98,28 @@ button{cursor:pointer;background:none;border:0}
 }
 .tag.on{color:var(--mint);border-color:rgba(79,220,168,.3)}
 
+.card.console{border-left-width:3px}
+.chead{border-bottom:1px solid var(--line)}
+.ps{flex:none}
+.nm.own{font-weight:600;font-size:16.5px;letter-spacing:-.01em}
+.sfx{
+  font-family:"Space Grotesk",sans-serif;font-size:16.5px;font-weight:600;
+  color:var(--dim);flex:none;margin-left:-3px;letter-spacing:-.01em;
+}
+.gap{flex:1}
+.own-b{
+  font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);border:1px solid var(--line);
+  border-radius:4px;padding:1px 5px;margin-left:5px;vertical-align:1px;
+}
+.bay.guide{position:relative;padding-left:26px}
+.bay.guide::before{
+  content:"";position:absolute;left:13px;top:6px;bottom:6px;
+  width:1px;background:var(--line);
+}
+.bay.guide .row-t{font-size:13.5px;color:var(--muted)}
+.bay.guide .row-t b{color:var(--text);font-weight:600}
+
 .bay{padding:0 14px;border-top:1px solid var(--line)}
 .row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
 .row:last-child{border-bottom:0}
@@ -273,6 +295,10 @@ function now(){return new Date().toISOString()}
 function fmt(t){return t?new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"}):""}
 function ago(t){if(!t)return"";var d=Math.floor((Date.now()-new Date(t))/864e5);return d?d+"d":"today"}
 function cmp(a,b){return a.toLowerCase()<b.toLowerCase()?-1:1}
+function tint(hex,a){
+  var n=parseInt(hex.slice(1),16);
+  return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";
+}
 function mem(id){for(var i=0;i<S.members.length;i++)if(S.members[i].id===id)return S.members[i];return null}
 function nm(id){var m=mem(id);return m?m.name:"—"}
 function occ(cid){return S.members.filter(function(m){return S.activation[m.id]===cid})}
@@ -328,21 +354,21 @@ function commit(aid,cid,released){
   var act=Object.assign({},S.activation);act[aid]=cid;
   var sn=Object.assign({},S.since);sn[aid]=now();
   var msg=prev
-    ? nm(cid)+" took "+nm(aid)+"'s account"+(released?" (released from "+nm(prev)+")":" — NOT released from "+nm(prev))
-    : nm(cid)+" activated "+nm(aid)+"'s account";
+    ? nm(cid)+"\u2019s PS5 took "+nm(aid)+"\u2019s PSN"+(released?" (released from "+nm(prev)+")":" \u2014 NOT released from "+nm(prev))
+    : nm(cid)+"\u2019s PS5 activated "+nm(aid)+"\u2019s PSN";
   sheet=null;
   save(logged(Object.assign({},S,{activation:act,since:sn,stale:stale}),msg));
 }
 function release(aid,cid){
   var act=Object.assign({},S.activation);act[aid]=null;
   var sn=Object.assign({},S.since);sn[aid]=null;
-  save(logged(Object.assign({},S,{activation:act,since:sn}),nm(cid)+" released "+nm(aid)+"'s account"));
+  save(logged(Object.assign({},S,{activation:act,since:sn}),nm(cid)+"\u2019s PS5 released "+nm(aid)+"\u2019s PSN"));
 }
 function clearGhost(id){
   var g=null;S.stale.forEach(function(s){if(s.id===id)g=s});
   if(!g)return;
   save(logged(Object.assign({},S,{stale:S.stale.filter(function(s){return s.id!==id})}),
-    "Ghost cleared on "+nm(g.consoleId)+" ("+nm(g.memberId)+"'s account)"));
+    "Ghost cleared on "+nm(g.consoleId)+"\u2019s PS5 ("+nm(g.memberId)+"\u2019s PSN)"));
 }
 function rename(id,v){
   save(Object.assign({},S,{members:S.members.map(function(m){
@@ -356,12 +382,12 @@ function addGames(oid,raw){
   if(!add.length)return;
   save(logged(Object.assign({},S,{members:S.members.map(function(m){
     return m.id===oid?Object.assign({},m,{games:m.games.concat(add).sort(cmp)}):m})}),
-    nm(oid)+"'s library +"+(add.length===1?add[0]:add.length+" games")));
+    nm(oid)+"\u2019s PSN +"+(add.length===1?add[0]:add.length+" games")));
 }
 function dropGame(oid,t){
   save(logged(Object.assign({},S,{members:S.members.map(function(m){
     return m.id===oid?Object.assign({},m,{games:m.games.filter(function(g){return g!==t})}):m})}),
-    nm(oid)+"'s library −"+t));
+    nm(oid)+"\u2019s PSN \u2212"+t));
 }
 function search(v){
   v=v.trim().toLowerCase();if(!v)return[];
@@ -382,7 +408,7 @@ function reset(){if(confirm("Wipe the board for everyone?"))save(seed())}
 function drawChrome(){
   var st=document.getElementById("stats"), p=document.getElementById("pill");
   if(!S){st.textContent="";p.innerHTML='<span class="led warn"></span>Loading';return}
-  st.textContent=S.members.length+" consoles · "+placed()+" shared · "+totalGames()+" games";
+  st.textContent=S.members.length+" PS5s \u00b7 "+placed()+" shared \u00b7 "+totalGames()+" games";
   var cls="led live",txt="Live";
   if(!live()){cls="led warn";txt="Local"}
   else if(sync==="err"){cls="led err";txt="Offline"}
@@ -392,27 +418,29 @@ function drawChrome(){
 
 function consoleCard(c){
   var o=occ(c.id), g=ghosts(c.id), h="";
-  h+='<div class="card"><div class="card-head">'
-   + '<span class="dot" style="background:'+c.color+'"></span>'
-   + '<input class="nm" value="'+esc(c.name)+'" data-a="rn" data-id="'+c.id+'" aria-label="Console owner">'
-   + '<span class="tag'+(o.length?" on":"")+'">'+o.length+'</span></div>';
-  h+='<div class="bay">';
-  if(!o.length&&!g.length) h+='<div class="blank">Nothing activated here.</div>';
+  h+='<div class="card console" style="border-left-color:'+c.color+'">'
+   + '<div class="card-head chead" style="background:linear-gradient(90deg,'+tint(c.color,.16)+',transparent 65%)">'
+   + '<svg class="ps" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="'+c.color+'" stroke-width="2" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="3"/><path d="M7 12h2M8 11v2M16 12h.01"/></svg>'
+   + '<input class="nm own" value="'+esc(c.name)+'" size="'+Math.max(4,c.name.length)+'" data-a="rn" data-id="'+c.id+'" aria-label="PS5 owner">'
+   + '<span class="sfx">\u2019s PS5</span><span class="gap"></span>'
+   + '<span class="tag'+(o.length?" on":"")+'">'+o.length+' PSN</span></div>';
+  h+='<div class="bay guide">';
+  if(!o.length&&!g.length) h+='<div class="blank">No PSN accounts activated.</div>';
   o.forEach(function(a){
     h+='<div class="row"><span class="dot" style="background:'+a.color+'"></span>'
-     + '<span class="row-t"><b>'+esc(a.name)+"</b>'s account"
-     + (a.id===c.id?' <span class="sub">· own</span>':"")
+     + '<span class="row-t"><b>'+esc(a.name)+"</b>\u2019s PSN"
+     + (a.id===c.id?' <span class="own-b">own</span>':"")
      + (a.games.length?' <span class="sub">· '+a.games.length+"</span>":"")+"</span>"
      + '<span class="mono">'+ago(S.since[a.id])+"</span>"
      + '<button class="btn btn-q btn-s" data-a="rel" data-acc="'+a.id+'" data-con="'+c.id+'">Release</button></div>';
   });
   g.forEach(function(s){
     h+='<div class="row ghost-row"><span class="dot"></span>'
-     + '<span class="row-t"><b>'+esc(nm(s.memberId))+"</b>'s account · ghost</span>"
+     + '<span class="row-t"><b>'+esc(nm(s.memberId))+"</b>\u2019s PSN · ghost claim</span>"
      + '<button class="btn btn-q btn-s" data-a="gx" data-id="'+s.id+'">Clear</button></div>';
   });
   h+='</div><div class="card-foot">'
-   + '<button class="btn btn-pri btn-w" data-a="open" data-con="'+c.id+'">Activate an account</button></div></div>';
+   + '<button class="btn btn-pri btn-w" data-a="open" data-con="'+c.id+'">Activate a PSN account</button></div></div>';
   return h;
 }
 
@@ -420,12 +448,12 @@ function libCard(m){
   var open=openLib===m.id, h="";
   h+='<div class="card"><div class="card-head tap" data-a="lib" data-id="'+m.id+'">'
    + '<span class="dot" style="background:'+m.color+'"></span>'
-   + '<span class="nm dsp">'+esc(m.name)+"</span>"
-   + '<span class="tag">'+m.games.length+(open?" ▾":" ▸")+"</span></div>";
+   + '<span class="nm dsp">'+esc(m.name)+"\u2019s PSN</span>"
+   + '<span class="tag">'+m.games.length+(open?" \u25be":" \u25b8")+"</span></div>";
   if(open){
     h+='<div class="bay">';
-    h+='<div class="row" style="border:0;padding:11px 0 3px"><span class="sub">Reachable from '
-     + reach(m.id).map(function(c){return esc(nm(c))}).join(" and ")+"</span></div>";
+    h+='<div class="row" style="border:0;padding:11px 0 3px"><span class="sub">Playable on '
+     + reach(m.id).map(function(c){return esc(nm(c))+"\u2019s PS5"}).join(" and ")+"</span></div>";
     if(!m.games.length) h+='<div class="blank">Nothing listed yet.</div>';
     else{
       h+='<div class="chips">';
@@ -448,20 +476,20 @@ function modal(){
   var moving=!!(pick&&prev&&prev!==cid);
   var ok=!!pick&&(!moving||sheet.rel!==null);
   var h='<div class="scrim" data-a="scrim"><div class="modal" role="dialog" aria-modal="true">'
-   + "<h2>"+esc(nm(cid))+"</h2>"
-   + '<p class="lede">Whose account is this console taking?</p>';
+   + "<h2>"+esc(nm(cid))+"\u2019s PS5</h2>"
+   + '<p class="lede">Whose PSN account is this PS5 taking?</p>';
   S.members.forEach(function(a){
     var at=S.activation[a.id]||null;
-    var tail=at===cid?"here":at?"on "+nm(at):"free";
+    var tail=at===cid?"here":at?"on "+nm(at)+"\u2019s PS5":"free";
     h+='<button class="opt'+(pick===a.id?" on":"")+'" data-a="pick" data-id="'+a.id+'"'+(at===cid?" disabled":"")+">"
-     + '<span class="dot" style="background:'+a.color+'"></span>'+esc(a.name)
+     + '<span class="dot" style="background:'+a.color+'"></span>'+esc(a.name)+"\u2019s PSN"
      + '<span class="mono">'+esc(tail)+"</span></button>";
   });
   if(moving){
-    h+='<div class="gate"><p>Did '+esc(nm(prev))+" turn console sharing off first?</p><div class=\"pair\">"
+    h+='<div class="gate"><p>Did '+esc(nm(prev))+"\u2019s PS5 turn console sharing off first?</p><div class=\"pair\">"
      + '<button class="btn'+(sheet.rel===true?" yes":"")+'" data-a="rel1">Yes</button>'
      + '<button class="btn'+(sheet.rel===false?" no":"")+'" data-a="rel0">No / unsure</button></div>'
-     + (sheet.rel===false?'<p class="tip">Raises a ghost claim on '+esc(nm(prev))+".</p>":"")
+     + (sheet.rel===false?'<p class="tip">Raises a ghost claim on '+esc(nm(prev))+"\u2019s PS5.</p>":"")
      + "</div>";
   }
   h+='<div class="acts"><button class="btn" data-a="x">Cancel</button>'
@@ -477,9 +505,9 @@ function draw(){
 
   if(S.stale.length){
     S.stale.forEach(function(s){
-      h+='<div class="alert"><h3>'+esc(nm(s.consoleId))+" never released "+esc(nm(s.memberId))+"</h3>"
+      h+='<div class="alert"><h3>'+esc(nm(s.consoleId))+"\u2019s PS5 never released "+esc(nm(s.memberId))+"\u2019s PSN</h3>"
        + "<p>"+esc(nm(s.memberId))+" may be locked out of their own games until this clears.</p><ol>"
-       + "<li><b>"+esc(nm(s.memberId))+":</b> Settings → Users and Accounts → Other → Restore Licenses</li>"
+       + "<li><b>"+esc(nm(s.memberId))+":</b> Settings \u2192 Users and Accounts \u2192 Other \u2192 Restore Licenses</li>"
        + "<li>Full shutdown, not rest mode</li>"
        + "<li>Still stuck? <b>"+esc(nm(s.consoleId))+"</b> signs in and turns sharing off</li></ol>"
        + '<button class="btn btn-s" data-a="gx" data-id="'+s.id+'">Mark cleared</button></div>';
@@ -487,7 +515,7 @@ function draw(){
   }
 
   h+='<div class="cols"><div class="col">';
-  h+='<div class="sec-head"><span class="eyebrow">Consoles</span></div>';
+  h+='<div class="sec-head"><span class="eyebrow">PS5s</span></div>';
   S.members.forEach(function(c){h+=consoleCard(c)});
   h+='<div class="foot"><button class="btn btn-q btn-s" data-a="madd">Add person</button>'
    + '<button class="btn btn-q btn-s" data-a="wipe">Reset</button></div>';
@@ -505,13 +533,13 @@ function draw(){
     else hits.slice(0,40).forEach(function(x){
       var w=reach(x.o.id);
       h+='<div class="hit"><div class="hit-t">'+esc(x.t)+"</div>"
-       + '<div class="hit-o"><span class="dot" style="background:'+x.o.color+'"></span>'+esc(x.o.name)+"</div>"
-       + '<div class="hit-w">Play on '+w.map(function(c){return "<b>"+esc(nm(c))+"</b>"}).join(" and ")+"</div>"
-       + (blocked(x.o.id)?'<div class="hit-x">Ghost claim open — their own console may be locked.</div>':"")
+       + '<div class="hit-o"><span class="dot" style="background:'+x.o.color+'"></span>'+esc(x.o.name)+"\u2019s PSN</div>"
+       + '<div class="hit-w">Play on '+w.map(function(c){return "<b>"+esc(nm(c))+"\u2019s PS5</b>"}).join(" and ")+"</div>"
+       + (blocked(x.o.id)?'<div class="hit-x">Ghost claim open \u2014 their own PS5 may be locked.</div>':"")
        + "</div>";
     });
   }
-  h+='<div class="sec-head" style="margin-top:22px"><span class="eyebrow">Libraries</span></div>';
+  h+='<div class="sec-head" style="margin-top:22px"><span class="eyebrow">PSN libraries</span></div>';
   S.members.forEach(function(m){h+=libCard(m)});
 
   h+="<details><summary>Rules of the rack</summary><ol>"
