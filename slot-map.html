@@ -1,0 +1,754 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #12111A; --panel: #1C1A27; --panel-hi: #252231; --line: #322D46;
+    --text: #EDEBF5; --muted: #8F89A8; --dim: #5F5A74;
+    --violet: #8B7BFF; --mint: #5BE0B0; --warn: #FF8A5B; --amber: #FFB454;
+  }
+  * { box-sizing: border-box; }
+  #app {
+    background: var(--ink); color: var(--text);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: 15px; line-height: 1.5; padding: 18px 14px 40px;
+    max-width: 620px; margin: 0 auto; -webkit-font-smoothing: antialiased;
+  }
+  #app h1, #app h2, #app h3 { font-family: "Space Grotesk", system-ui, sans-serif; margin: 0; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+  }
+  .masthead { margin-bottom: 20px; }
+  .masthead h1 { font-size: 27px; font-weight: 700; letter-spacing: -.02em; margin: 6px 0 4px; }
+  .masthead p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+  .banner {
+    border: 1px solid var(--line); border-left: 3px solid var(--amber);
+    background: var(--panel); border-radius: 4px; padding: 9px 11px;
+    font-size: 12.5px; color: var(--muted); margin-bottom: 18px;
+  }
+  .block { margin-bottom: 24px; }
+  .block-head { margin-bottom: 10px; }
+
+  /* ---- console rack (signature) ---- */
+  .rack {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; margin-bottom: 9px; overflow: hidden;
+  }
+  .rack-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 13px 10px; border-bottom: 1px solid var(--line);
+  }
+  .rack-title {
+    font-family: "Space Grotesk", sans-serif; font-weight: 500; font-size: 16px;
+    background: none; border: 0; color: var(--text); padding: 2px 4px; margin-left: -4px;
+    border-radius: 4px; min-width: 0; flex: 1;
+  }
+  .rack-title:hover { background: var(--panel-hi); }
+  .rack-title:focus { outline: 2px solid var(--violet); background: var(--panel-hi); }
+  .rack-count {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    color: var(--dim); flex: none; letter-spacing: .05em;
+  }
+  .bay { padding: 4px 13px 4px; }
+  .slot {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 0; border-bottom: 1px solid var(--line);
+  }
+  .slot:last-child { border-bottom: 0; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .slot-who { font-size: 14px; flex: 1; min-width: 0; }
+  .slot-who b { font-weight: 600; }
+  .slot-meta {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    color: var(--dim); flex: none;
+  }
+  .slot.ghost .slot-who { color: var(--warn); }
+  .slot.ghost .dot { background: var(--warn) !important; opacity: .5; }
+  .bay-empty { padding: 12px 0 13px; color: var(--dim); font-size: 13px; }
+  .rack-foot { padding: 4px 13px 12px; }
+
+  /* ---- alerts ---- */
+  .alert {
+    border: 1px solid rgba(255,138,91,.35); background: rgba(255,138,91,.07);
+    border-radius: 8px; padding: 13px 14px; margin-bottom: 9px;
+  }
+  .alert h3 { font-size: 14.5px; color: var(--warn); margin-bottom: 5px; }
+  .alert p { margin: 0 0 10px; font-size: 13px; }
+  .alert ol { margin: 0 0 12px; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+  .alert li { margin-bottom: 4px; }
+
+  button {
+    font-family: "IBM Plex Sans", sans-serif; font-size: 13px; font-weight: 500;
+    border-radius: 5px; padding: 7px 12px; cursor: pointer; color: var(--text);
+    border: 1px solid var(--line); background: var(--panel-hi);
+    transition: border-color .12s, background .12s;
+  }
+  button:hover { border-color: var(--muted); }
+  button:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+  button[disabled] { opacity: .4; cursor: not-allowed; }
+  .btn-primary { background: var(--violet); border-color: var(--violet); color: #0E0C18; font-weight: 600; }
+  .btn-primary:hover:not([disabled]) { background: #9C8FFF; border-color: #9C8FFF; }
+  .btn-ghost { background: transparent; color: var(--muted); }
+  .btn-sm { font-size: 12px; padding: 5px 9px; }
+
+  /* ---- sheet ---- */
+  .search {
+    width: 100%; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 7px; padding: 11px 13px; color: var(--text);
+    font-family: "IBM Plex Sans", sans-serif; font-size: 14.5px;
+  }
+  .search::placeholder { color: var(--dim); }
+  .search:focus { outline: none; border-color: var(--violet); }
+
+  .hits { margin-top: 9px; }
+  .hit {
+    background: var(--panel); border: 1px solid var(--line);
+    border-left: 3px solid var(--violet); border-radius: 7px;
+    padding: 11px 13px; margin-bottom: 7px;
+  }
+  .hit-title { font-family: "Space Grotesk", sans-serif; font-weight: 500; font-size: 15px; }
+  .hit-line {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; color: var(--muted); margin-top: 3px;
+  }
+  .hit-where { font-size: 13px; margin-top: 6px; }
+  .hit-where b { font-weight: 600; }
+  .hit-warn { font-size: 12.5px; color: var(--warn); margin-top: 6px; }
+  .nohit {
+    margin-top: 9px; padding: 14px 13px; border: 1px dashed var(--line);
+    border-radius: 7px; color: var(--muted); font-size: 13.5px;
+  }
+
+  .lib-name { font-family: "Space Grotesk", sans-serif; font-size: 15px; flex: 1; }
+  .lib-note {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    color: var(--dim); padding: 10px 0 4px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 0 10px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--panel-hi); border: 1px solid var(--line);
+    border-radius: 20px; padding: 5px 6px 5px 11px; font-size: 12.5px;
+  }
+  .chip-x {
+    border: 0; background: none; color: var(--dim); padding: 0 4px;
+    font-size: 15px; line-height: 1; cursor: pointer; border-radius: 50%;
+  }
+  .chip-x:hover { color: var(--warn); background: none; }
+  .lib-add { display: flex; gap: 7px; padding: 2px 0 12px; }
+  .lib-add .search { flex: 1; font-size: 13.5px; padding: 8px 11px; }
+
+  .sheet-bg {
+    position: fixed; inset: 0; background: rgba(8,7,14,.72); z-index: 50;
+    display: flex; align-items: flex-end; justify-content: center; padding: 12px;
+  }
+  .sheet {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 16px; width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto;
+  }
+  .sheet h2 { font-size: 18px; margin-bottom: 4px; }
+  .sheet .sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  .opt {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 11px 12px; margin-bottom: 7px; font-size: 14px;
+  }
+  .opt.sel { border-color: var(--violet); background: rgba(139,123,255,.12); }
+  .opt .tail { margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--dim); }
+  .gate {
+    border: 1px solid var(--line); border-radius: 6px; padding: 12px;
+    margin: 14px 0 4px; background: rgba(255,138,91,.05);
+  }
+  .gate p { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+  .gate-btns { display: flex; gap: 7px; }
+  .gate-btns button { flex: 1; }
+  .sel-y { border-color: var(--mint); background: rgba(91,224,176,.14); color: var(--mint); }
+  .sel-n { border-color: var(--warn); background: rgba(255,138,91,.14); color: var(--warn); }
+  .note { margin: 10px 0 0; font-size: 12.5px; color: var(--warn); }
+  .sheet-foot { display: flex; gap: 8px; margin-top: 16px; }
+  .sheet-foot button { flex: 1; }
+
+  details {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 9px;
+  }
+  summary { cursor: pointer; font-family: "Space Grotesk", sans-serif; font-weight: 500; font-size: 14.5px; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: " +"; color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+  details[open] summary::after { content: " –"; }
+  details ol { margin: 12px 0 2px; padding-left: 19px; font-size: 13px; color: var(--muted); }
+  details li { margin-bottom: 7px; }
+  details li b { color: var(--text); font-weight: 600; }
+
+  .logline {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px;
+    color: var(--muted); padding: 6px 0; border-bottom: 1px solid var(--line);
+  }
+  .logline:last-child { border-bottom: 0; }
+  .logline .ts { color: var(--dim); }
+  .empty { color: var(--muted); font-size: 13px; padding: 6px 0; }
+  .foot { margin-top: 24px; display: flex; justify-content: space-between; gap: 10px; }
+</style>
+
+<div id="app"><div class="empty">Loading the rack…</div></div>
+
+<script>
+(function () {
+  /* ============================================================
+     CONFIG — paste your two Supabase values between the quotes.
+     Both are safe to be public. Nothing else in this file
+     needs editing.
+     ============================================================ */
+  var SUPABASE_URL = "https://dxooxfhtqumivvufqjzz.supabase.co";  
+  var SUPABASE_KEY = "sb_publishable_9y3970eZYd5JPldVM6QwBQ_wbzgyhpV";   // the "anon public" key
+  var BOARD_ID     = "rack";
+  /* ========================================================== */
+
+  var KEY = "psslots:v2";
+  var PALETTE = ["#5BE0B0","#FF6B8A","#8B7BFF","#F26BC8","#4CC9F0","#FFB454","#7DD3FC","#C4B5FD"];
+
+  var state = null, sheet = null;
+  var query = "", openLib = null;
+
+  // boards created before libraries existed have no games array
+  function normalize(s) {
+    if (!s || !s.members) return seed();
+    s.members = s.members.map(function (m) {
+      return m.games ? m : Object.assign({}, m, { games: [] });
+    });
+    return s;
+  }
+  var sync = "boot";        // boot | ok | saving | error | local
+  var lastPull = 0, writing = false, dirty = null;
+
+  function seed() {
+    return {
+      members: [1,2,3,4,5].map(function (n, i) {
+        return { id: "m" + n, name: "Player " + n, color: PALETTE[i], games: [] };
+      }),
+      activation: {}, since: {}, stale: [], log: []
+    };
+  }
+
+  var esc = function (s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  };
+
+  function now() { return new Date().toISOString(); }
+  function fmt(iso) {
+    if (!iso) return "";
+    return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function ago(iso) {
+    if (!iso) return "";
+    var d = Math.floor((Date.now() - new Date(iso)) / 86400000);
+    return d === 0 ? "today" : d === 1 ? "1d" : d + "d";
+  }
+  function member(id) {
+    for (var i = 0; i < state.members.length; i++) if (state.members[i].id === id) return state.members[i];
+    return null;
+  }
+  function nameOf(id) { var m = member(id); return m ? m.name : "—"; }
+  function colorOf(id) { var m = member(id); return m ? m.color : "#666"; }
+
+  // accounts currently activated on a given console
+  function occupants(consoleId) {
+    return state.members.filter(function (m) { return state.activation[m.id] === consoleId; });
+  }
+  function ghostsOn(consoleId) {
+    return state.stale.filter(function (s) { return s.consoleId === consoleId; });
+  }
+
+  /* ---------- storage ---------- */
+
+  function configured() { return !!(SUPABASE_URL && SUPABASE_KEY); }
+
+  function api(path, opts) {
+    opts = opts || {};
+    var headers = {
+      apikey: SUPABASE_KEY,
+      Authorization: "Bearer " + SUPABASE_KEY,
+      "Content-Type": "application/json",
+      Prefer: "return=representation"
+    };
+    return fetch(SUPABASE_URL.replace(/\/+$/, "") + "/rest/v1/" + path, {
+      method: opts.method || "GET", headers: headers, body: opts.body
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { throw new Error(r.status + " " + t); });
+      return r;
+    });
+  }
+
+  async function pull() {
+    var r = await api("boards?id=eq." + encodeURIComponent(BOARD_ID) + "&select=data");
+    var rows = await r.json();
+    if (!rows.length) {
+      var fresh = seed();
+      await api("boards", { method: "POST", body: JSON.stringify({ id: BOARD_ID, data: fresh }) });
+      return fresh;
+    }
+    return normalize(rows[0].data);
+  }
+
+  async function push(next) {
+    await api("boards?id=eq." + encodeURIComponent(BOARD_ID), {
+      method: "PATCH",
+      body: JSON.stringify({ data: next, updated_at: new Date().toISOString() })
+    });
+  }
+
+  async function save(next) {
+    state = next;
+    if (!configured()) {
+      sync = "local"; render();
+      if (window.storage) { try { await window.storage.set(KEY, JSON.stringify(next), true); } catch (e) {} }
+      return;
+    }
+    sync = "saving"; render();
+    writing = true;
+    try {
+      await push(next);
+      sync = "ok"; lastPull = Date.now();
+    } catch (e) {
+      sync = "error";
+    }
+    writing = false;
+    render();
+  }
+
+  async function poll() {
+    if (!configured() || writing || sheet) return;
+    try {
+      var remote = await pull();
+      if (JSON.stringify(remote) !== JSON.stringify(state)) { state = remote; render(); }
+      if (sync === "error") { sync = "ok"; render(); }
+      lastPull = Date.now();
+    } catch (e) { sync = "error"; render(); }
+  }
+
+  function withLog(s, text) {
+    var log = [{ ts: now(), text: text }].concat(s.log).slice(0, 60);
+    return Object.assign({}, s, { log: log });
+  }
+
+  /* ---------- games ---------- */
+
+  // where an account's library can actually be played:
+  // the owner's own console, plus whichever console holds their slot
+  function playableOn(ownerId) {
+    var out = [ownerId];
+    var at = state.activation[ownerId];
+    if (at && at !== ownerId) out.push(at);
+    return out;
+  }
+  function ownerBlocked(ownerId) {
+    return state.stale.some(function (s) { return s.memberId === ownerId; });
+  }
+  function addGames(ownerId, raw) {
+    var incoming = raw.split(",").map(function (g) { return g.trim(); }).filter(Boolean);
+    if (!incoming.length) return;
+    var m = member(ownerId);
+    var have = m.games.map(function (g) { return g.toLowerCase(); });
+    var added = [];
+    incoming.forEach(function (g) {
+      if (have.indexOf(g.toLowerCase()) === -1) { added.push(g); have.push(g.toLowerCase()); }
+    });
+    if (!added.length) return;
+    var members = state.members.map(function (x) {
+      return x.id === ownerId ? Object.assign({}, x, { games: x.games.concat(added).sort(cmp) }) : x;
+    });
+    save(withLog(Object.assign({}, state, { members: members }),
+      added.length === 1
+        ? nameOf(ownerId) + "'s library gained " + added[0]
+        : nameOf(ownerId) + "'s library gained " + added.length + " games"));
+  }
+  function removeGame(ownerId, title) {
+    var members = state.members.map(function (x) {
+      if (x.id !== ownerId) return x;
+      return Object.assign({}, x, { games: x.games.filter(function (g) { return g !== title; }) });
+    });
+    save(withLog(Object.assign({}, state, { members: members }),
+      nameOf(ownerId) + "'s library dropped " + title));
+  }
+  function cmp(a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; }
+
+  function searchGames(q) {
+    q = q.trim().toLowerCase();
+    if (!q) return [];
+    var hits = [];
+    state.members.forEach(function (m) {
+      m.games.forEach(function (g) {
+        if (g.toLowerCase().indexOf(q) !== -1) hits.push({ owner: m, title: g });
+      });
+    });
+    return hits.sort(function (a, b) { return cmp(a.title, b.title); });
+  }
+  function totalGames() {
+    return state.members.reduce(function (n, m) { return n + m.games.length; }, 0);
+  }
+
+  /* ---------- actions ---------- */
+
+  function commit(accountId, consoleId, released) {
+    var prev = state.activation[accountId] || null;
+    var stale = state.stale.slice();
+    if (prev && prev !== consoleId && !released) {
+      stale.push({ id: "s" + Date.now(), memberId: accountId, consoleId: prev, ts: now() });
+    }
+    var activation = Object.assign({}, state.activation); activation[accountId] = consoleId;
+    var since = Object.assign({}, state.since); since[accountId] = now();
+    // arriving here clears any ghost this console held for this account
+    stale = stale.filter(function (s) { return !(s.memberId === accountId && s.consoleId === consoleId); });
+
+    var msg = prev
+      ? nameOf(consoleId) + "'s console took " + nameOf(accountId) + "'s account"
+        + (released ? " (released from " + nameOf(prev) + " first)" : " — NOT released from " + nameOf(prev))
+      : nameOf(consoleId) + "'s console activated " + nameOf(accountId) + "'s account";
+
+    sheet = null;
+    save(withLog(Object.assign({}, state, { activation: activation, since: since, stale: stale }), msg));
+  }
+
+  function removeSlot(accountId, consoleId) {
+    var activation = Object.assign({}, state.activation); activation[accountId] = null;
+    var since = Object.assign({}, state.since); since[accountId] = null;
+    save(withLog(Object.assign({}, state, { activation: activation, since: since }),
+      nameOf(consoleId) + "'s console released " + nameOf(accountId) + "'s account"));
+  }
+
+  function clearGhost(sid) {
+    var g = null;
+    state.stale.forEach(function (s) { if (s.id === sid) g = s; });
+    if (!g) return;
+    var stale = state.stale.filter(function (s) { return s.id !== sid; });
+    save(withLog(Object.assign({}, state, { stale: stale }),
+      "Ghost cleared on " + nameOf(g.consoleId) + "'s console (" + nameOf(g.memberId) + "'s account)"));
+  }
+
+  function rename(id, name) {
+    var members = state.members.map(function (m) {
+      return m.id === id ? Object.assign({}, m, { name: name || "Unnamed" }) : m;
+    });
+    save(Object.assign({}, state, { members: members }));
+  }
+
+  function addMember() {
+    if (state.members.length >= 8) return;
+    var n = state.members.length + 1;
+    var members = state.members.concat([{
+      id: "m" + Date.now(), name: "Player " + n, color: PALETTE[(n - 1) % PALETTE.length]
+    }]);
+    save(Object.assign({}, state, { members: members }));
+  }
+
+  function resetAll() {
+    if (!confirm("Wipe the rack for everyone in the group?")) return;
+    save(seed());
+  }
+
+  /* ---------- render ---------- */
+
+  function render() {
+    var app = document.getElementById("app");
+    if (!state) { app.innerHTML = '<div class="empty">Loading the rack…</div>'; return; }
+    var h = "";
+
+    h += '<div class="masthead">'
+      + '<div class="eyebrow">Console sharing · ' + state.members.length + '-way group</div>'
+      + "<h1>The Rack</h1>"
+      + "<p>Each console, and whose accounts are activated on it. Log every change here before you touch hardware.</p>"
+      + "</div>";
+
+    var bannerText, bannerColor;
+    if (!configured()) {
+      bannerText = "Not connected. Open this file, paste your Supabase URL and key into the CONFIG block at the top, and re-commit. Until then, changes stay in this tab only.";
+      bannerColor = "var(--amber)";
+    } else if (sync === "error") {
+      bannerText = "Can't reach the board. Check your connection, or that the Supabase URL and key are correct.";
+      bannerColor = "var(--warn)";
+    } else if (sync === "saving") {
+      bannerText = "Saving…";
+      bannerColor = "var(--violet)";
+    } else {
+      bannerText = "Live board. All five of you see and edit the same data.";
+      bannerColor = "var(--mint)";
+    }
+    h += '<div class="banner" style="border-left-color:' + bannerColor + '">' + esc(bannerText) + "</div>";
+
+    /* game lookup */
+    h += '<div class="block">'
+      + '<div class="block-head"><span class="eyebrow">Find a game · ' + totalGames() + " in the pool</span></div>"
+      + '<input id="gsearch" class="search" placeholder="Elden Ring, GT7, Spider-Man…" value="' + esc(query) + '" data-act="q" autocomplete="off">';
+
+    if (query.trim()) {
+      var hits = searchGames(query);
+      if (!hits.length) {
+        h += '<div class="nohit">Nobody in the group has that. Worth someone buying it.</div>';
+      } else {
+        h += '<div class="hits">';
+        hits.slice(0, 30).forEach(function (hit) {
+          var where = playableOn(hit.owner.id);
+          var blocked = ownerBlocked(hit.owner.id);
+          h += '<div class="hit">'
+            + '<div class="hit-title">' + esc(hit.title) + "</div>"
+            + '<div class="hit-line"><span class="dot" style="background:' + hit.owner.color + '"></span>'
+            + esc(hit.owner.name) + "'s library</div>"
+            + '<div class="hit-where">Playable on ' + where.map(function (c) {
+                return "<b>" + esc(nameOf(c)) + "</b>";
+              }).join(" and ") + (where.length === 1 ? "'s console only" : " consoles")
+            + "</div>";
+          if (blocked) {
+            h += '<div class="hit-warn">' + esc(hit.owner.name) + " has a ghost claim open, so their own console may be locked out until it clears.</div>";
+          }
+          h += "</div>";
+        });
+        h += "</div>";
+      }
+    }
+    h += "</div>";
+    if (state.stale.length) {
+      h += '<div class="block"><div class="block-head"><span class="eyebrow">Ghost claims · ' + state.stale.length + "</span></div>";
+      state.stale.forEach(function (s) {
+        h += '<div class="alert">'
+          + "<h3>" + esc(nameOf(s.consoleId)) + "'s console is holding on</h3>"
+          + "<p>It never released " + esc(nameOf(s.memberId)) + "'s account before the slot moved. Until this clears, "
+          + esc(nameOf(s.memberId)) + " may not be able to launch their own games on their own console.</p>"
+          + "<ol>"
+          + "<li><b>" + esc(nameOf(s.memberId)) + ":</b> Settings → Users and Accounts → Other → Restore Licenses</li>"
+          + "<li>Full shutdown, not rest mode, then power back on</li>"
+          + "<li>If still stuck, <b>" + esc(nameOf(s.consoleId)) + "</b> signs in and turns console sharing off</li>"
+          + "</ol>"
+          + '<button class="btn-sm" data-act="ghost" data-id="' + s.id + '">Mark cleared</button>'
+          + "</div>";
+      });
+      h += "</div>";
+    }
+
+    /* the rack */
+    h += '<div class="block"><div class="block-head"><span class="eyebrow">Consoles</span></div>';
+    state.members.forEach(function (c) {
+      var occ = occupants(c.id);
+      var gh = ghostsOn(c.id);
+      h += '<div class="rack">'
+        + '<div class="rack-head">'
+        + '<span class="dot" style="background:' + c.color + '"></span>'
+        + '<input class="rack-title" value="' + esc(c.name) + '" data-act="rename" data-id="' + c.id + '" aria-label="Console owner name">'
+        + '<span class="rack-count">' + occ.length + " ACTIVE</span>"
+        + "</div>";
+
+      h += '<div class="bay">';
+      if (!occ.length && !gh.length) {
+        h += '<div class="bay-empty">No accounts activated here.</div>';
+      }
+      occ.forEach(function (a) {
+        h += '<div class="slot">'
+          + '<span class="dot" style="background:' + a.color + '"></span>'
+          + '<span class="slot-who"><b>' + esc(a.name) + "</b>'s account"
+          + (a.id === c.id ? " <span style=\"color:var(--dim)\">· own</span>" : "")
+          + (a.games.length ? ' <span style="color:var(--dim)">· ' + a.games.length + " games</span>" : "") + "</span>"
+          + '<span class="slot-meta">' + ago(state.since[a.id]) + "</span>"
+          + '<button class="btn-sm btn-ghost" data-act="remove" data-account="' + a.id + '" data-console="' + c.id + '">Release</button>'
+          + "</div>";
+      });
+      gh.forEach(function (s) {
+        h += '<div class="slot ghost">'
+          + '<span class="dot"></span>'
+          + '<span class="slot-who"><b>' + esc(nameOf(s.memberId)) + "</b>'s account · ghost claim</span>"
+          + '<button class="btn-sm btn-ghost" data-act="ghost" data-id="' + s.id + '">Clear</button>'
+          + "</div>";
+      });
+      h += "</div>";
+
+      h += '<div class="rack-foot"><button class="btn-sm btn-primary" data-act="open" data-console="' + c.id + '">Activate an account here</button></div>';
+      h += "</div>";
+    });
+    h += "</div>";
+
+    /* libraries */
+    h += '<div class="block"><div class="block-head"><span class="eyebrow">Libraries</span></div>';
+    state.members.forEach(function (m) {
+      var open = openLib === m.id;
+      var at = state.activation[m.id];
+      h += '<div class="rack">'
+        + '<div class="rack-head" data-act="lib" data-id="' + m.id + '" style="cursor:pointer">'
+        + '<span class="dot" style="background:' + m.color + '"></span>'
+        + '<span class="lib-name">' + esc(m.name) + "'s library</span>"
+        + '<span class="rack-count">' + m.games.length + (open ? " ▾" : " ▸") + "</span>"
+        + "</div>";
+      if (open) {
+        h += '<div class="bay">';
+        h += '<div class="lib-note">Reachable from ' + playableOn(m.id).map(function (c) {
+            return esc(nameOf(c));
+          }).join(" and ") + (at && at !== m.id ? "" : ". Slot is home.") + "</div>";
+        if (!m.games.length) {
+          h += '<div class="bay-empty">Nothing listed yet. Add titles below, comma separated.</div>';
+        } else {
+          h += '<div class="chips">';
+          m.games.forEach(function (g) {
+            h += '<span class="chip">' + esc(g)
+              + '<button class="chip-x" data-act="rmgame" data-id="' + m.id + '" data-game="' + esc(g) + '" aria-label="Remove ' + esc(g) + '">×</button></span>';
+          });
+          h += "</div>";
+        }
+        h += '<div class="lib-add">'
+          + '<input class="search" placeholder="Add titles, comma separated" data-act="gameinput" data-id="' + m.id + '" autocomplete="off">'
+          + '<button class="btn-sm btn-primary" data-act="addgame" data-id="' + m.id + '">Add</button>'
+          + "</div>";
+        h += "</div>";
+      }
+      h += "</div>";
+    });
+    h += "</div>";
+
+    /* reference */
+    h += '<div class="block"><div class="block-head"><span class="eyebrow">Reference</span></div>';
+    h += "<details><summary>The move protocol</summary><ol>"
+      + "<li><b>Release first, activate second.</b> The old console turns console sharing off before the new one turns it on. This is the whole ballgame.</li>"
+      + "<li><b>Log it here</b> the moment it happens, not later.</li>"
+      + "<li><b>Full shutdown</b> the old console. Rest mode keeps the stale claim alive.</li>"
+      + "<li><b>Account owner runs Restore Licenses</b> on their own console after, to confirm their library came back.</li>"
+      + "<li><b>Cap the churn.</b> Rapid activation switching across many consoles can trip Sony's abuse detection and temporarily lock an account out of changing activations.</li>"
+      + "</ol></details>";
+    h += "<details><summary>When someone is locked out of their own games</summary><ol>"
+      + "<li><b>Restore Licenses</b> — Settings → Users and Accounts → Other → Restore Licenses. Fixes it most of the time.</li>"
+      + "<li><b>Full power cycle</b>, not rest mode.</li>"
+      + "<li><b>The holding console releases</b> — whoever has the ghost claim signs in and disables console sharing.</li>"
+      + "<li><b>Deactivate All</b> from the PSN web account page under Device Management. Works once every 6 months and forces everyone to re-activate. Last resort.</li>"
+      + "</ol></details>";
+    h += "<details><summary>Activity log</summary>";
+    if (!state.log.length) h += '<div class="empty">Nothing logged yet.</div>';
+    else state.log.forEach(function (l) {
+      h += '<div class="logline"><span class="ts">' + fmt(l.ts) + "</span> · " + esc(l.text) + "</div>";
+    });
+    h += "</details></div>";
+
+    h += '<div class="foot">'
+      + '<button class="btn-sm btn-ghost" data-act="add">Add person</button>'
+      + '<button class="btn-sm btn-ghost" data-act="reset">Reset board</button>'
+      + "</div>";
+
+    if (sheet) h += sheetHtml();
+
+    app.innerHTML = h;
+
+    // innerHTML rebuilds kill focus, so put the cursor back in the search box
+    if (query) {
+      var box = document.getElementById("gsearch");
+      if (box && document.activeElement !== box) {
+        box.focus();
+        box.setSelectionRange(box.value.length, box.value.length);
+      }
+    }
+  }
+
+  function sheetHtml() {
+    var cid = sheet.consoleId;
+    var pick = sheet.account;
+    var prev = pick ? (state.activation[pick] || null) : null;
+    var moving = !!(pick && prev && prev !== cid);
+    var ready = !!pick && (!moving || sheet.released !== null);
+
+    var h = '<div class="sheet-bg" data-act="backdrop"><div class="sheet">'
+      + "<h2>" + esc(nameOf(cid)) + "'s console</h2>"
+      + '<p class="sub">Whose account is being activated on this console?</p>';
+
+    state.members.forEach(function (a) {
+      var at = state.activation[a.id] || null;
+      var tail = at === cid ? "already here" : at ? "on " + nameOf(at) : "free";
+      h += '<button class="opt' + (pick === a.id ? " sel" : "") + '" data-act="pick" data-id="' + a.id + '"'
+        + (at === cid ? " disabled" : "") + ">"
+        + '<span class="dot" style="background:' + a.color + '"></span>'
+        + esc(a.name) + "'s account"
+        + '<span class="tail">' + esc(tail) + "</span></button>";
+    });
+
+    if (moving) {
+      h += '<div class="gate"><p>Did ' + esc(nameOf(prev)) + "'s console turn console sharing off first?</p>"
+        + '<div class="gate-btns">'
+        + '<button data-act="rel" data-v="1" class="' + (sheet.released === true ? "sel-y" : "") + '">Yes, released</button>'
+        + '<button data-act="rel" data-v="0" class="' + (sheet.released === false ? "sel-n" : "") + '">No / not sure</button>'
+        + "</div>";
+      if (sheet.released === false) {
+        h += '<p class="note">This raises a ghost claim on ' + esc(nameOf(prev)) + "'s console with the fix steps attached.</p>";
+      }
+      h += "</div>";
+    }
+
+    h += '<div class="sheet-foot">'
+      + '<button data-act="cancel">Cancel</button>'
+      + '<button class="btn-primary" data-act="commit"' + (ready ? "" : " disabled") + ">Log it</button>"
+      + "</div></div></div>";
+    return h;
+  }
+
+  /* ---------- events ---------- */
+
+  document.getElementById("app").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-act]");
+    if (!t) return;
+    var act = t.getAttribute("data-act");
+
+    if (act === "open") { sheet = { consoleId: t.getAttribute("data-console"), account: null, released: null }; render(); }
+    else if (act === "pick") { sheet.account = t.getAttribute("data-id"); sheet.released = null; render(); }
+    else if (act === "rel") { sheet.released = t.getAttribute("data-v") === "1"; render(); }
+    else if (act === "commit") { commit(sheet.account, sheet.consoleId, sheet.released === true); }
+    else if (act === "cancel") { sheet = null; render(); }
+    else if (act === "backdrop") { if (e.target === t) { sheet = null; render(); } }
+    else if (act === "remove") { removeSlot(t.getAttribute("data-account"), t.getAttribute("data-console")); }
+    else if (act === "ghost") { clearGhost(t.getAttribute("data-id")); }
+    else if (act === "add") { addMember(); }
+    else if (act === "reset") { resetAll(); }
+    else if (act === "lib") { openLib = openLib === t.getAttribute("data-id") ? null : t.getAttribute("data-id"); render(); }
+    else if (act === "rmgame") { removeGame(t.getAttribute("data-id"), t.getAttribute("data-game")); }
+    else if (act === "addgame") {
+      var id = t.getAttribute("data-id");
+      var box = document.querySelector('[data-act="gameinput"][data-id="' + id + '"]');
+      if (box && box.value.trim()) { addGames(id, box.value); }
+    }
+  });
+
+  document.getElementById("app").addEventListener("input", function (e) {
+    var t = e.target.closest('[data-act="q"]');
+    if (t) { query = t.value; render(); }
+  });
+
+  document.getElementById("app").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var t = e.target.closest('[data-act="gameinput"]');
+    if (t && t.value.trim()) { e.preventDefault(); addGames(t.getAttribute("data-id"), t.value); }
+  });
+
+  document.getElementById("app").addEventListener("change", function (e) {
+    var t = e.target.closest('[data-act="rename"]');
+    if (t) rename(t.getAttribute("data-id"), t.value.trim());
+  });
+
+  /* ---------- boot ---------- */
+
+  (async function () {
+    if (!configured()) {
+      sync = "local";
+      if (window.storage) {
+        try {
+          var r = await window.storage.get(KEY, true);
+          state = r && r.value ? normalize(JSON.parse(r.value)) : seed();
+        } catch (e) { state = seed(); }
+      } else { state = seed(); }
+      render();
+      return;
+    }
+    try { state = await pull(); sync = "ok"; }
+    catch (e) { state = seed(); sync = "error"; }
+    render();
+    setInterval(poll, 6000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) poll();
+    });
+  })();
+})();
+</script>
